@@ -1,0 +1,25 @@
+{
+    "name": "orkhanahmadov/laravel-golden-pay",
+    "description": "GoldenPay payment integration for Laravel 5",
+    "type": "library",
+    "homepage": "https://github.com/orkhanahmadov/laravel-golden-pay",
+    "keywords": ["azerbaijan", "goldenpay", "goldenpay.az"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Orkhan Ahmadov",
+            "email": "ahmadov90@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Orkhanahmadov\\LaravelGoldenPay\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.6.4",
+        "guzzlehttp/guzzle": "^6.2"
+    }
+}
