@@ -86,7 +86,8 @@ php artisan vendor:publish
 ```
 This command will create `goldenpay` folder inside your root `config` directory and dump all config files.
 
-###License
+License
+---
 MIT
 
 ### Todo

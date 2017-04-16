@@ -15,17 +15,13 @@ class Kernel extends ConsoleKernel
         parent::schedule($schedule);
 
         $schedule->call(function () {
-            Log::info('CRON: manualPaymentCheck - ' . date('d.m.Y H:i'));
-
             (new GoldenPay)->manualPaymentCheck();
-        })->everyMinute(); // TODO: change to everyThirtyMinutes
+        })->everyThirtyMinutes();
 
 
         if (config('goldenpay.delete_unused'))
             $schedule->call(function () {
-                Log::info('CRON: deleteUnusedPayments - ' . date('d.m.Y H:i'));
-
                 (new GoldenPay)->deleteUnusedPayments();
-            })->everyMinute(); // TODO: change to daily
+            })->daily();
     }
 }

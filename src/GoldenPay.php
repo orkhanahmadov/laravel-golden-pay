@@ -65,15 +65,15 @@ class GoldenPay extends Controller
      * @return string
      */
     public function init($initData) {
-        $initData["merchantName"] = $this->merchantName;
-        $initData["amount"]       = $initData["amount"] * 100;
+        $initData['merchantName'] = $this->merchantName;
+        $initData['amount']       = $initData['amount'] * 100;
         $initData['hashCode']     = $this->getHashCode($initData);
 
-        if(!isset($initData["lang"]))
-            $initData["lang"] = App::getLocale(); // TODO: temp
+        $initData['lang'] = $this->getLocale($initData['lang']);
 
         return $this->getPaymentKey($this->paymentKeyUrl, $initData);
     }
+
 
     /**
      * Successful payments handler
@@ -82,8 +82,9 @@ class GoldenPay extends Controller
      */
     public function paymentSuccess()
     {
-        return $this->paymentResult(request()->query("payment_key"), true);
+        return $this->paymentResult(request()->query('payment_key'), true);
     }
+
 
     /**
      * Failed payments handler
@@ -92,7 +93,68 @@ class GoldenPay extends Controller
      */
     public function paymentFail()
     {
-        return $this->paymentResult(request()->query("payment_key"));
+        return $this->paymentResult(request()->query('payment_key'));
+    }
+
+
+    /**
+     * Every 30 minutes check payment statuses
+     */
+    public function manualPaymentCheck()
+    {
+        $uncheckedPayments = GoldenPayModel::whereNull('reference_number')->get();
+
+        foreach ($uncheckedPayments as $payment) {
+            $paymentResult = $this->getPaymentStatus($payment->payment_key);
+
+            $collect = [
+                'payment_status_code' => $paymentResult['status']['code'],
+                'payment_status_message' => $paymentResult['status']['message'],
+                'reference_number' => $paymentResult['rrn'],
+                'payment_date' => $paymentResult['paymentDate'],
+                'check_count' => $paymentResult['checkCount'] + 1
+            ];
+
+            if (!empty($paymentResult['cardNumber']))
+                $collect['card_number'] = encrypt($paymentResult['cardNumber']);
+
+            $payment->update($collect);
+
+            if ($paymentResult['status']['code'] == 1)
+                $payment->payment()->save(new Payment([
+                    'amount' => $paymentResult['amount'] / 100,
+                    'item' => $paymentResult['description']
+                ]));
+        }
+    }
+
+
+    /**
+     * Delete unused GoldenPay initialisations
+     */
+    public function deleteUnusedPayments()
+    {
+        GoldenPayModel::wherePaymentStatusCode(819)->delete();
+    }
+
+
+    /**
+     * Set locale for payment page
+     *
+     * @param bool|string $lang
+     * @return string
+     */
+    private function getLocale($lang = false)
+    {
+        if ($lang)
+            return $lang;
+
+        $locale = App::getLocale();
+
+        if ($locale == 'az')
+            $locale = 'lv';
+
+        return $locale;
     }
 
 
@@ -103,7 +165,8 @@ class GoldenPay extends Controller
      * @param array $initData
      * @return string
      */
-    private function getPaymentKey($url, $initData) {
+    private function getPaymentKey($url, $initData)
+    {
         $request = new GuzzleRequest(
             'POST',
             $url,
@@ -116,12 +179,12 @@ class GoldenPay extends Controller
         $result = json_decode($response->getBody()->getContents(), true);
 
         GoldenPayModel::create([
-            "card_type" => $initData["cardType"],
-            "payment_key" => $result["paymentKey"],
-            "language" => $initData["lang"]
+            'card_type' => $initData['cardType'],
+            'payment_key' => $result['paymentKey'],
+            'language' => $initData['lang']
         ]);
 
-        return $this->paymentPageUrl . $result["paymentKey"];
+        return $this->paymentPageUrl . $result['paymentKey'];
     }
 
 
@@ -170,37 +233,6 @@ class GoldenPay extends Controller
 
 
     /**
-     * Every 30 minutes check payment statuses
-     */
-    public function manualPaymentCheck()
-    {
-        $uncheckedPayments = GoldenPayModel::whereNull('reference_number')->get();
-
-        foreach ($uncheckedPayments as $payment) {
-            $paymentResult = $this->getPaymentStatus($payment->payment_key);
-
-            $collect = [
-                'payment_status_code' => $paymentResult['status']['code'],
-                'payment_status_message' => $paymentResult['status']['message'],
-                'reference_number' => $paymentResult['rrn'],
-                'payment_date' => $paymentResult['paymentDate'],
-                'check_count' => $paymentResult['checkCount'] + 1
-            ];
-
-            if (!empty($paymentResult['cardNumber']))
-                $collect['card_number'] = encrypt($paymentResult['cardNumber']);
-
-            $payment->update($collect);
-
-            if ($paymentResult['status']['code'] == 1)
-                $payment->payment()->save(new Payment([
-                    'amount' => $paymentResult['amount'] / 100,
-                    'item' => $paymentResult['description']
-                ]));
-        }
-    }
-
-    /**
      * Get payment payment status with defined paymentKey
      *
      * @param string $paymentKey
@@ -208,8 +240,8 @@ class GoldenPay extends Controller
      */
     private function getPaymentStatus($paymentKey)
     {
-        $params["payment_key"] = $paymentKey;
-        $params["hash_code"] = $this->getHashCode($params);
+        $params['payment_key'] = $paymentKey;
+        $params['hash_code'] = $this->getHashCode($params);
 
         $request = new GuzzleRequest(
             'GET',
@@ -217,18 +249,9 @@ class GoldenPay extends Controller
             ['Content-Type' => 'application/json', 'Accept' => 'application/json']
         );
 
-        $response = (new Client())->send($request, ["query" => $params]);
+        $response = (new Client())->send($request, ['query' => $params]);
 
         return json_decode($response->getBody()->getContents(), true);
-    }
-
-
-    /**
-     * Delete unused GoldenPay init data
-     */
-    public function deleteUnusedPayments()
-    {
-        GoldenPayModel::wherePaymentStatusCode(819)->delete();
     }
 
 
@@ -238,11 +261,10 @@ class GoldenPay extends Controller
      */
     private function getHashCode($params)
     {
-
-        if (isset($params["payment_key"]))
+        if (isset($params['payment_key']))
             $hash = md5(
                 $this->authKey .
-                $params["payment_key"]
+                $params['payment_key']
             );
 
         else
@@ -250,9 +272,9 @@ class GoldenPay extends Controller
             $hash = md5(
                 $this->authKey .
                 $this->merchantName .
-                $params["cardType"] .
-                $params["amount"] .
-                $params["description"]
+                $params['cardType'] .
+                $params['amount'] .
+                $params['description']
             );
 
         return $hash;
