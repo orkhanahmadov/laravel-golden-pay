@@ -91,5 +91,5 @@ License
 MIT
 
 ### Todo
-
- - Send SMS on successful payment
+ - Better error handling
+ - Create tests (this package is untested #shame)
