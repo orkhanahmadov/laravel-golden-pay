@@ -224,6 +224,7 @@ class GoldenPay extends Controller
             ]));
 
         session([
+            'goldenpay_payment_key' => $paymentKey,
             'goldenpay_status_code' => $paymentResult['status']['code'],
             'goldenpay_status_message' => $paymentResult['status']['message'],
             'goldenpay_amount' => $paymentResult['amount'] / 100,
