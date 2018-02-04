@@ -184,7 +184,10 @@ class GoldenPay extends Controller
             'language' => $initData['lang']
         ]);
 
-        return $this->paymentPageUrl . $result['paymentKey'];
+        return [
+            'payment_key' => $result['paymentKey'],
+            'payment_page' => $this->paymentPageUrl . $result['paymentKey'],
+        ];
     }
 
 
