@@ -34,7 +34,7 @@ class LaravelGoldenPayServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/main.php', 'goldenpay'
+            __DIR__ . '/Config/main.php', 'goldenpay'
         );
 
         $this->app->bind('laravelgoldenpay', function () {
