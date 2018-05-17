@@ -66,7 +66,7 @@ class GoldenPay extends Controller
      */
     public function init($initData) {
         $initData['merchantName'] = $this->merchantName;
-        $initData['amount']       = (int) $initData['amount'] * 100;
+        $initData['amount']       = (int) ($initData['amount'] * 100);
         $initData['hashCode']     = $this->getHashCode($initData);
 
         $initData['lang'] = $this->getLocale($initData['lang']);
