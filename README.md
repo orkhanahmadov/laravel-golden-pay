@@ -1,5 +1,5 @@
 # WARNING!
-**This package is not maintained anymore!**
+# This package is not maintained anymore!
 
 Instead use [orkhanahmadov/laravel-goldenpay](https://github.com/orkhanahmadov/laravel-goldenpay) package for full-feature Goldenpay Laravel integration or [orkhanahmadov/goldenpay](https://github.com/orkhanahmadov/goldenpay) for standalone Goldenpay PHP library.
 
